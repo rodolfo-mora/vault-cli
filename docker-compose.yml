@@ -1,0 +1,44 @@
+version: '3.8'
+
+services:
+  # HashiCorp Vault server for development/testing
+  vault:
+    image: vault:1.15.0
+    container_name: vault-dev
+    ports:
+      - "8200:8200"
+    environment:
+      - VAULT_DEV_ROOT_TOKEN_ID=dev-token
+      - VAULT_DEV_LISTEN_ADDRESS=0.0.0.0:8200
+      - VAULT_ADDR=http://0.0.0.0:8200
+    cap_add:
+      - IPC_LOCK
+    command: vault server -dev -dev-root-token-id=dev-token -dev-listen-address=0.0.0.0:8200
+    volumes:
+      - vault-data:/vault/data
+    healthcheck:
+      test: ["CMD", "vault", "status"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Vault CLI application
+  vault-cli:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: vault-cli-app
+    environment:
+      - VAULT_ADDR=http://vault:8200
+      - VAULT_TOKEN=dev-token
+    volumes:
+      - ./data:/app/data:rw
+    depends_on:
+      vault:
+        condition: service_healthy
+    # Example command (uncomment to run automatically)
+    # command: ["encrypt", "--transit-key", "test-key", "--text", "Hello, World!"]
+
+volumes:
+  vault-data:
+    driver: local 

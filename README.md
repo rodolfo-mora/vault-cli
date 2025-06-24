@@ -13,6 +13,8 @@ A comprehensive CLI tool for encrypting and decrypting data using HashiCorp Vaul
 
 ## Installation
 
+### Option 1: Build from source
+
 1. Clone the repository:
 ```bash
 git clone <repository-url>
@@ -27,6 +29,48 @@ go mod tidy
 3. Build the application:
 ```bash
 go build -o vault-cli
+```
+
+### Option 2: Using Makefile
+
+1. Clone the repository:
+```bash
+git clone <repository-url>
+cd vault-cli
+```
+
+2. Build using Makefile:
+```bash
+make build
+```
+
+3. Install to system (optional):
+```bash
+make install
+```
+
+### Option 3: Using Docker
+
+1. Build the Docker image:
+```bash
+docker build -t vault-cli .
+```
+
+2. Run the container:
+```bash
+docker run --rm vault-cli --help
+```
+
+### Option 4: Using Docker Compose (with Vault server)
+
+1. Start the development environment:
+```bash
+docker-compose up -d vault
+```
+
+2. Wait for Vault to be ready, then run the CLI:
+```bash
+docker-compose run --rm vault-cli encrypt --transit-key test-key --text "Hello, World!"
 ```
 
 ## Configuration
@@ -57,6 +101,13 @@ The tool supports both command-line arguments and environment variables for Vaul
 export VAULT_ADDR=http://127.0.0.1:8200
 export VAULT_TOKEN=your-token
 ./vault-cli encrypt --transit-key my-key --text "Hello, World!"
+
+# Using Docker
+docker run --rm vault-cli encrypt \
+  --vault-addr http://127.0.0.1:8200 \
+  --vault-token your-token \
+  --transit-key my-key \
+  --text "Hello, World!"
 ```
 
 #### Decrypt a string:
@@ -94,6 +145,14 @@ export VAULT_TOKEN=your-token
   --transit-key my-key \
   --file input.txt \
   --override
+
+# Using Docker with volume mount
+docker run --rm -v $(pwd):/app/data vault-cli encrypt \
+  --vault-addr http://127.0.0.1:8200 \
+  --vault-token your-token \
+  --transit-key my-key \
+  --file /app/data/input.txt \
+  --output /app/data/encrypted/
 ```
 
 #### Decrypt a file:
@@ -148,6 +207,75 @@ If your transit engine is mounted at a different path:
   --text "Hello, World!"
 ```
 
+## Development
+
+### Using Makefile
+
+The project includes a comprehensive Makefile with the following targets:
+
+```bash
+# Build for current platform
+make build-local
+
+# Build for all platforms
+make build-all
+
+# Run tests
+make test
+
+# Run tests with coverage
+make test-coverage
+
+# Format code
+make fmt
+
+# Run linter
+make lint
+
+# Clean build artifacts
+make clean
+
+# Install dependencies
+make deps
+
+# Show all available targets
+make help
+```
+
+### Using Docker for Development
+
+1. Start the development environment with Vault:
+```bash
+docker-compose up -d vault
+```
+
+2. Create a transit key in Vault:
+```bash
+docker-compose exec vault vault secrets enable transit
+docker-compose exec vault vault write -f transit/keys/test-key
+```
+
+3. Test the CLI:
+```bash
+docker-compose run --rm vault-cli encrypt --transit-key test-key --text "Hello, World!"
+```
+
+### Building for Different Platforms
+
+```bash
+# Build for Linux
+make build-linux
+
+# Build for macOS
+make build-darwin
+
+# Build for Windows
+make build-windows
+
+# Build for all platforms
+make build-all
+```
+
 ## Best Practices
 
 ### For Large Files
@@ -164,6 +292,7 @@ If your transit engine is mounted at a different path:
 1. **Token management**: Use appropriate token policies with minimal required permissions
 2. **Network security**: Ensure Vault communication is over HTTPS in production
 3. **File permissions**: Be mindful of file permissions on encrypted output
+4. **Container security**: When using Docker, avoid mounting sensitive directories
 
 ## Error Handling
 
@@ -206,6 +335,18 @@ done
   > encrypted_creds.txt
 ```
 
+### Using Docker in CI/CD:
+```bash
+# Build and run in CI pipeline
+docker build -t vault-cli .
+docker run --rm vault-cli encrypt \
+  --vault-addr $VAULT_ADDR \
+  --vault-token $VAULT_TOKEN \
+  --transit-key $TRANSIT_KEY \
+  --file config.yaml \
+  --output ./secure/
+```
+
 ## Troubleshooting
 
 ### Common Issues
@@ -215,11 +356,18 @@ done
 3. **"transit key is required"**: Always specify `--transit-key`
 4. **"cannot specify both --file and --text"**: Choose either file or text input, not both
 
+### Docker Issues
+
+1. **Permission denied**: Ensure proper volume mounts and user permissions
+2. **Network connectivity**: Use `--network host` or proper Docker networking
+3. **File not found**: Check volume mount paths and file locations
+
 ### Performance Tips
 
 1. **Increase batch size** for faster processing of large files
 2. **Use local Vault instances** for development to reduce network latency
 3. **Monitor Vault server metrics** during bulk operations
+4. **Use multi-stage Docker builds** for smaller production images
 
 ## License
 

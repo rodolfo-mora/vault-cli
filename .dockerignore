@@ -1,0 +1,40 @@
+# Git
+.git
+.gitignore
+
+# Build artifacts
+build/
+vault-cli
+vault-cli.exe
+*.exe
+
+# Test files
+coverage.out
+coverage.html
+*.test
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Documentation
+README.md
+*.md
+
+# Docker files
+Dockerfile
+.dockerignore
+
+# Makefile
+Makefile
+
+# Temporary files
+*.tmp
+*.log 
